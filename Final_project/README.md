@@ -1,6 +1,13 @@
-in this folder there is anthore 2 folders 
-one for the first semester and one for the second my gradution project was devided into 2 phases the first phase which is in the first folder is for searching and making the prototype
-the second phase is for apllying the research and 
-in the first the semster you will find the research of the project Personal Identification using Cancelable Biometrics and Deep
-Learning its quite a long reserch 
-this is some of the content so you can have an idea
+# Personal Identification System with Deep Learning and Cancelable Biometrics (Graduation Project)🌟
+
+This repository contains the research materials for my graduation project, which is identification system using deep learning and cancelable biometrics.
+
+The repository is organized as follows:
+
+Research.pdf: This document details the complete research. <br>
+Summary.md: This file provides a concise overview of the research, highlighting key concepts and findings. <br>
+Presentation.pdf: A presentation summarizing the project. <br>
+
+Project Overview
+
+This project addresses the limitations of traditional password-based authentication by proposing a more secure and user-friendly system. It utilizes deep learning for feature extraction from biometric data (face and fingerprint) and incorporates cancelable biometrics to enhance data privacy.
