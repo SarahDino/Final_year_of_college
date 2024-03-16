@@ -1,4 +1,4 @@
-
+# Data preparation
 
 ```python
 import time #timing measurements 
@@ -63,3 +63,193 @@ print(SelectedFingerprints)
 filename = 'GP/selectedfingerprints.npy' #Save the SelectedFingerprints list as a NumPy array file "GP/selectedfingerprints.npy".
 np.save(filename, SelectedFingerprints)
 ```
+## Output
+First line list of labels <br>
+Second line list of faces pictures <br>
+Third line fingerprint of the right index for each person <br>
+it is organized the first fingerprint and the first face picture belong to the first person in the list of labels. <br><br>
+
+![outputData preparation](https://github.com/SarahDino/Final_year_of_college/assets/144706995/dfd41b0c-63e7-4696-a10b-6f2389f12b7a)
+<br><br>
+
+
+
+# Enrollment 
+
+```python
+# Enrollment phase: Cancelable template generation from faces and fingerprints
+# using Transfer learning (pretrained CNN as Feature Extractor) + Random Convolution
+
+# numerical computations and array manipulations
+import numpy
+import numpy as np
+
+# building and using deep learning models
+import tensorflow 
+from tensorflow import keras as ks
+
+# definition of Random Convolution
+
+RandomKernel = [1, 2, 1］# values for random convolution
+
+# function named convolution that performs a basic 1D convolution operation at a specific index within an array A using a kernel K
+def convolution(A, K, index):
+  sum = 0
+  if ((index-1) >= 0):
+      sum = sum + K[0]*A[index-1]
+  sum = K[1]*A[index]
+
+  if ((index+1) <Len(A)):
+    sum = sum + K[2]*A[index+1]
+  return sum
+
+
+# function named random_convolution that iterates over an array V and applies the convolution function at each element using the RandomKernel
+# It returns a new array R with the convolved values
+def random_convolution (V, Kernel):
+  R = np. zeros (Len(V))
+  for i in range (len(V)):
+      R[i] = convolution(V, Kernel, i)
+return R
+
+
+# Data Preparation Loads a list of labels from ListofLabels
+ListofLabels = ['Akshay Kumar, Alexandra Daddario', 'Alia Bhatt, Amitabh Bachchan', ...]
+
+# Load pre-selected face and fingerprint paths from NumPy arrays (selectedfaces and selectedfingerprints).
+filename = "GP/SelectedFaces.npy"
+selectedfaces = np.load(filename)
+
+filename = "GP/SelectedFingerprints.npy"
+selectedfingerprints = np.load(filename)
+
+
+
+
+# load the pre-trained model Resnet50 from TensorFlow's without dense layers
+# (we don't need this classification capability. We simply need the deep features that the model has learned to represent the biometric data effectively)
+resnet50_base = ks.applications.resnet50.ResNet50(weights="imagenet", include_top=False, input_shape=(224, 224, 3))
+avg = ks.layers.GlobalAveragePooling2D()(resnet50_base.output)
+
+# Creates a new model named resnet50_modelfs takes the input of the pre-trained ResNet50 and outputs the global average pooling features
+resnet50_modelfs = ks.Model(inputs=resnet50_base.input, outputs=avg)
+resnet50_modelfs.summary
+
+print("\n Start processing data ... \n ")
+
+# Initializes an empty NumPy array cancelabletemplates to store the generated templates
+cancelabletemplates = np.array(())
+
+# Iterates through each label in ListofLabels
+for i in range(len(ListofLabels)):
+  print（i）
+  facefilename = "GP/Faces/Faces/" + selectedfaces[i] # Load the face and fingerprint image paths based on the current label and selected files
+  imface = ks.preprocessing.image.load_img(facefilename)
+  faceimage = ks.preprocessing.image.img_to_array(imface)
+  fingerprintsfilename = "GP/Fingerprints/Real/" + selectedfingerprints[i]
+  imfingerprint = ks.preprocessing.image.load_img(fingerprintsfilenane) # Load face and fingerprint images using keras.preprocessing.image functions
+  fingerprint = ks.preprocessing.image.img_to_array(imfingerprint)
+  faceimage = tensorflow.image.resize(faceimage, [224, 224]) # Resize both images to a standard size (224x224 px) using TensorFlow's image module
+  fingerprint = tensorflow.image.resize(fingerprint, [224, 224])
+  images_resized = np.array([faceimage, fingerprint]) # Combine the resized face and fingerprint images into a single array
+
+  # Feature Extraction combined images using pretrained CNN - ResNet50 
+  inputs = ks.applications.resnet50.preprocess_input(images_resized)
+  Y_proba = resnet50_modelfs.predict(inputs) # Extract deep features from preprocessed images using the resnet50_modelfs model and store them in Y_proba
+  deepfeatures = Y_proba
+
+  print("\n deep features")
+  print(deepfeatures.shape) # Print the shape of the deep features
+  print(deepfeatures) # Print the deep features 
+
+  # random projection of deepfeatures
+  # Create a copy of the deep features and combine them into a single array X_new
+  X = deepfeatures.copy() 
+  X_new = numpy.append(X[0], X[1), axis=0)
+  print (X_new)
+
+  # Apply the random_convolution function on X_new using the RandomKernel to generate a randomly modified feature vector
+  X_final = random_convolution (X_new, RandomKernel)
+
+  # Print the shape and content of the randomly convolved features
+  print("\n Random Convolution of deep features ...") 
+  print(X_final.shape) 
+  print("\n cancelable template ...")
+
+  # Consider the current feature vector as the cancelable template, copy it to cancelabletemplate, and print its shape and content
+  cancelabletemplate = X_final.copy() 
+  print(X_final)
+  print(cancelabletemplate.shape)
+  print (cancelabletemplate)
+
+  # Print the corresponding label from ListofLabels.
+  print (ListofLabels[i])
+
+# Depending on whether it's the first iteration (i == 0 cancelabletemplates is empty create a new NumPy array and insert the first user's cancelable
+# template), or insert the current template at the specified index in the existing array(builds up an array containing all the cancelable templates for
+# enrolled users).
+  if i == 0:
+      cancelabletemplates = np.array([cancelabletemplate])
+  else:
+      cancelabletemplates = np.insert(cancelabletemplates, i, cancelabletemplate, axis=0)
+
+
+# save (cancelabletemplate + id) in securedDB
+print("\n Saving Database and IDs ... \n")
+
+# save two separate NumPy arrays
+# Saves the cancelabletemplates array (containing all the generated cancelable templates) to the specified file using the np.save function from NumPy
+filename = "GP/DB.npy"
+np.save(filenane, cancelabletemplates)
+
+# filename for saving the user labels (essentially IDs).
+# Saves the ListofLabels (containing the list of labels/names associated with each user) to the specified file using np.save
+filename = "GP/IDs.npy" 
+np. save(filename, ListofLabels)
+
+```
+## Output
+1. we have the deep features extraction
+2. then the random convolution of deep features
+3. then we have the cancelable template and the name of each person and their ID
+4. at the end it will be Saved in “DB” file and “IDs” file.
+<br><br>
+![Enrollment1](https://github.com/SarahDino/Final_year_of_college/assets/144706995/3def9fde-58cd-42a6-84e0-989b5e8f8714)<br>
+![Enrollment2](https://github.com/SarahDino/Final_year_of_college/assets/144706995/a30463d6-fc2a-4e02-b764-1d4173587f59)<br>
+![Enrollment3](https://github.com/SarahDino/Final_year_of_college/assets/144706995/cca219b4-77ef-4935-b936-b50b9d748cdd)<br>
+<br>
+
+
+# Personal identification 
+
+```python
+
+
+
+
+
+
+
+
+
+```
+## Output
+
+
+
+
+
+# Evaluation 
+
+```python
+
+
+
+
+
+
+
+
+
+```
+## Output
