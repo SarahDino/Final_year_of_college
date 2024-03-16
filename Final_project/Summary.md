@@ -90,7 +90,7 @@ These studies demonstrate the feasibility and potential benefits of the proposed
 
 **4.3 Datasets**
 
-We used publicly available datasets from Kaggle, such as the "Face Recognition Dataset", for training and testing the deep learning models.
+We used publicly available datasets from Kaggle the Face Recognition Dataset, for training and testing the deep learning models.
 
 **5. Implementation**
 
@@ -105,19 +105,28 @@ We used publicly available datasets from Kaggle, such as the "Face Recognition D
    This phase selects one random face image and fingerprint for each person from the dataset. These are used in the enrollment phase to build the database.
 
   **Enrollment Method:**
-    The selected facial images and fingerprints are used to generate a cancelable template for each person.
-    Deep features are extracted from both modalities (face and fingerprint) using a pre-trained CNN (ResNet50).
-    These deep features are then merged and modified using random convolution, creating a unique cancelable template.
-    The generated template is stored in the database for future identification.
+  * Using 1D random convolution (1 dimension)
+   The selected facial images and fingerprints are used to generate a cancelable template for each person.
+
+   Deep features are extracted from both face and fingerprint using a pre-trained CNN (ResNet50). 
+   
+   Instead of simply combining the features directly, the system applies a random convolution operation. This involves applying a filter(Kernal) with random weights to each set of deep features (face and fingerprint) separately performing calculations to modify them. The random weights act like a secret code that scrambles the information in a controlled way.
+
+These deep features are then merged, creating a unique cancelable template.
+
+The generated template is stored in the database for future identification.
+
+ ![1D random convolution ](1Drandomconvolution.png)
+
 
   **Personal Identification:**
     During sign-in, a random face image and fingerprint are selected for a specific person.
     Similar to enrollment, deep features are extracted from the captured data using ResNet50.
-    Random convolution is applied, and the resulting features are compared to the stored templates in the database using Euclidean distance.
+    Random convolution is applied, and the resulting features are compared to the stored templates in the database using Euclidean distance(the straight-line distance between two points).
     The person with the closest template (smallest distance) is identified as the user attempting to access the system.
 
   **Evaluation:**
-    The system's performance is evaluated by calculating identification accuracy with varying numbers of face and fingerprint images per person (5, 10, 15, 20, 25, 30). This helps determine the optimal number of samples for reliable identification.
+    The system's performance is evaluated by calculating identification accuracy with different numbers of face and fingerprint images per person (5, 10, 15, 20, 25, 30). This helps determine the optimal number of samples for reliable identification.
 
 **5.3 I/O Screens**
 
@@ -161,3 +170,22 @@ This project explored the application of deep learning and cancelable biometrics
     Investigate additional biometric modalities (e.g., iris recognition) for further security enhancement.
 
 By incorporating these future endeavors, the system's performance and adaptability can be further improved.
+
+
+
+SelectedFaces = ListofLables.copy()
+dataset = read_csv("/GP/Datasetfaces.csv")
+Faces = dataset.iloc[:,0].values
+Lables = dataset.iloc[:,1].values
+
+seed(int(time.time()))
+
+for i in range(len(ListofLables)):
+  faces = (Faces[Labels == ListofLabels[i]])[:len(Faces)]
+  value = randint(0 len(faces)-1)
+  SelectedFaces[i] = faces[value]
+
+  print(SelectedFaces)
+
+  filename = 'GP/selectedfaces.npy'
+  
