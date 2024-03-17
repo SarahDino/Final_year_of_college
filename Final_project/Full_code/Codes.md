@@ -69,7 +69,7 @@ Second line list of faces pictures <br>
 Third line fingerprint of the right index for each person <br>
 it is organized the first fingerprint and the first face picture belong to the first person in the list of labels. <br><br>
 
-![outputData preparation](https://github.com/SarahDino/Final_year_of_college/assets/144706995/dfd41b0c-63e7-4696-a10b-6f2389f12b7a)
+![outputData preparation](outputDatapreparation.jpg)
 <br><br>
 
 
@@ -214,7 +214,6 @@ np. save(filename, ListofLabels)
 3. then we have the cancelable template and the name of each person and their ID
 4. at the end it will be Saved in “DB” file and “IDs” file.
 <br><br>
-![Enrollment1](Enrollment1.jpg)<br>
 ![Enrollment1](Enrollment2.jpg)<br>
 ![Enrollment3](Enrollment3.jpg)<br>
 <br>
