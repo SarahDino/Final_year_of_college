@@ -214,10 +214,9 @@ np. save(filename, ListofLabels)
 3. then we have the cancelable template and the name of each person and their ID
 4. at the end it will be Saved in “DB” file and “IDs” file.
 <br><br>
-![Enrollment1](https://github.com/SarahDino/Final_year_of_college/assets/144706995/baf7d7b3-4f68-4aee-bd70-3670e3c3e10f)
-<br>
-![Enrollment2](https://github.com/SarahDino/Final_year_of_college/assets/144706995/a30463d6-fc2a-4e02-b764-1d4173587f59)<br>
-![Enrollment3](https://github.com/SarahDino/Final_year_of_college/assets/144706995/cca219b4-77ef-4935-b936-b50b9d748cdd)<br>
+![Enrollment1](Enrollment1.jpg)<br>
+![Enrollment1](Enrollment2.jpg)<br>
+![Enrollment3](Enrollment3.jpg)<br>
 <br>
 
 
