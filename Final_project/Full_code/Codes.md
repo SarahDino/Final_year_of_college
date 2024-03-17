@@ -10,7 +10,7 @@ from random import seed #Sets a starting point for random number generation
 from random import randint #Generates a random integer within a specified range
 
 #Data Preparation Faces (list of labels for facial images)
-ListofLabels = ['Akshay Kumar, Alexandra Daddario', 'Alia Bhatt, Amitabh Bachchan', ...]
+ListofLabels = ['Akshay Kumar', 'Alexandra Daddario', 'Alia Bhatt', 'Amitabh Bachchan', ...]
 
 
 #create a copy of ListofLabels and store it in SelectedFaces to keep track of which faces were chosen randomly
@@ -114,7 +114,7 @@ return R
 
 
 # Data Preparation Loads a list of labels from ListofLabels
-ListofLabels = ['Akshay Kumar, Alexandra Daddario', 'Alia Bhatt, Amitabh Bachchan', ...]
+ListofLabels = ['Akshay Kumar', 'Alexandra Daddario', 'Alia Bhatt', 'Amitabh Bachchan', ...]
 
 # Load pre-selected face and fingerprint paths from NumPy arrays (selectedfaces and selectedfingerprints).
 filename = "GP/SelectedFaces.npy"
@@ -222,15 +222,153 @@ np. save(filename, ListofLabels)
 # Personal identification 
 
 ```python
+# identification phase: Cancelable template using Transfen learning (pretrained CNN as Feature Extracton)
+
+impont numpy
+import tensorflow
+import time
+from tensorflow import keras as ks
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import random_projection
+from pandas import read_csv
+from numpy.linalg import norm
+
+#Impont Randon Number Generation
+from random import seed
+from random import randint
 
 
+# definition of Random Convolution with a kernel of size 3
+Randomkernel = [1, 2, 1]
+
+def convolution(A, K, index):
+    Sum = 0
+    if ((index-1) >= 0):
+        sum = sum + K[0)*A[index-1]
+    sum = K[1]*A[index]
+    if ((index+1)<len(A)):
+        sum = sum + K[2]*A[index+1]
+    return sum
 
 
+def random_convolution(V, Kernel):
+    R = np.zeros(len(V))
+    for i in range(len(V)):
+        R[i] = convolution(V, Kernel, i)
+    return R
 
 
+# set the seed of random generator
+seed(int(time.time()))
 
 
+# Load secured DB and IDs
+ListofLabels = ['Akshay Kumar', 'Alexandra Daddario', 'Alia Bhatt', 'Amitabh Bachchan', ...]
 
+filename = "GP/DB.npy"
+DB = np.load(filename)
+
+filename = "GP/IDs.npy"
+IDs = np.load(filename)
+
+
+# Load datasets
+dataset1 = read_csv("6P/Datasetfaces.csv")
+Faces = dataset1.iloc[:, 0].values
+LabelsFaces = dataset1.iloc[:, 1].values
+
+
+dataset2 = read_csv("GP/Datasetfingenpints.csv")
+Fingerprints = dataset2.iloc[:, 0]. values
+LabelsFingerprints = dataset2.iloc[:, 1].values
+
+
+# load the model
+# Resnet58 without dense layers ... including GlobalAveragePooLing20() layer -> 2048 features
+resnet50_base = ks.applications.resnet50.ResNet50(weights="imagenet", include_top=False, input_shape= (224, 224, 3))
+avg = ks.layers.GlobalAveragePooling2D()(resnet50_base.output)
+resnet50_modelfs = ks.Model(inputs=resnet50_base.input, outputs=avg)
+resnet50_modelfs.summary()
+
+print(" \n Start processing data ... \n ")
+
+# select randomly a person
+value = randint(0, len(ListofLabels)-1)
+Person = ListofLabels[value]
+
+print (Person)
+
+# select randomly one case (face + fingerprints) from datasets
+
+faces = (Faces[LabelsFaces == Person])[:len(Faces)]
+value = randint(0, len(faces)-1)
+SelectedFace = faces[value]
+
+print(SelectedFace)
+
+fingerprints = (Fingerprints[LabelsFingerprints == Person])[:len(Fingerprints)]
+value = randint(0, len(fingerprints)-1)
+SelectedFingerprints = fingerprints [value]
+
+print (SelectedFingerprints)
+
+
+# generate cancelable template
+facefilename = "GP/Faces/Faces/" + SelectedFace
+imface = ks.preprocessing.image.load_img(facefilename)
+faceimage = ks.preprocessing.image.img_to_array(imface)
+fingerprintsfilename = "GP/Real/" + SelectedFingerprints
+imfingerprint = ks.preprocessing.image.load_img(fingerprintsfilename)
+fingerprint = ks.preprocessing.image.img_to_array(imfingerprint)
+faceimage = tensorflow.image.resize(faceimage, [224, 224])
+fingerprint = tensorflow.image.resize(fingerprint, [224, 224])
+images_resized = np.array([faceimage, fingerprint])
+
+
+# Feature Extraction using pretrained CNN - ResNet50
+inputs = ks.applications.resnet50.preprocess_input(images_resized)
+Y_proba = resnet50_modelfs.predict(inputs)
+deepfeatures = Y_proba
+print("\n deep features")
+print (deepfeatures.shape)
+print (deepfeatures)
+
+
+# random projection of deepfeatures
+X = deepfeatures.copy()
+X_new = numpy.append(X[0], X[1), axis=0)
+print(X_new)
+X_final = randon_convolution(X_new, RandomKernel)
+
+print("\n in Randon Convolution of deep features ...")
+print(X_final.shape)
+print(X_final)
+print("\n cancelable template ...")
+
+cancelabletemplate = X_final.copy()
+print("cancelable template + Person ...")
+print(cancelabletemplate.shape)
+print(cancelabletemplate)
+print(Person)
+print("\n")
+
+
+# matching using Euclidean Distance between Cancelable template and DB ...
+print ("matching process")
+index = 0
+mindist = norm(DB[0]-cancelabletemplate)
+
+for i in range(len(DB)):
+    dist = norm (DB[i]-cancelabletemplate)
+    print (DB[i])
+    print (dist)
+    if (dist < mindist):
+        mindist = dist
+        index = 1
+
+print(IDs[index])
+print (mindist)
 ```
 ## Output
 
