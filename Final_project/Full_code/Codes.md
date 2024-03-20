@@ -224,15 +224,13 @@ np. save(filename, ListofLabels)
 ```python
 # identification phase: Cancelable template using Transfen learning (pretrained CNN as Feature Extracton)
 
-impont numpy
-import tensorflow
-import time
+impont numpy # numerical computations, array manipulations, storing and processing image data and feature vectors
+import tensorflow # building and using deep learning models
+import time # set a random number seed based on the current time
 from tensorflow import keras as ks
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn import random_projection
-from pandas import read_csv
-from numpy.linalg import norm
+from pandas import read_csv # reading data from CSV files
+from numpy.linalg import norm # calculates the Euclidean norm (distance) between two vectors, which is used for comparing the cancelable template with stored templates in the database
 
 #Impont Randon Number Generation
 from random import seed
@@ -240,6 +238,7 @@ from random import randint
 
 
 # definition of Random Convolution with a kernel of size 3
+# Same definition of RandomKernel and functions convolution and random_convolution as seen in the enrollment phase.
 Randomkernel = [1, 2, 1]
 
 def convolution(A, K, index):
@@ -259,11 +258,13 @@ def random_convolution(V, Kernel):
     return R
 
 
-# set the seed of random generator
+# set the seed for the random number generator used throughout the identification process
 seed(int(time.time()))
 
 
 # Load secured DB and IDs
+# Loads pre-enrolled users (ListofLabels) and the stored database of cancelable templates (DB) and IDs (IDs) from NumPy array files created during the enrollment phase
+
 ListofLabels = ['Akshay Kumar', 'Alexandra Daddario', 'Alia Bhatt', 'Amitabh Bachchan', ...]
 
 filename = "GP/DB.npy"
@@ -273,21 +274,25 @@ filename = "GP/IDs.npy"
 IDs = np.load(filename)
 
 
-# Load datasets
+# Load datasets for faces (dataset1) and fingerprints (dataset2) using pandas read_csv
+# Extracts face and fingerprint data along with their corresponding labels
+
 dataset1 = read_csv("6P/Datasetfaces.csv")
 Faces = dataset1.iloc[:, 0].values
 LabelsFaces = dataset1.iloc[:, 1].values
 
 
 dataset2 = read_csv("GP/Datasetfingenpints.csv")
-Fingerprints = dataset2.iloc[:, 0]. values
+Fingerprints = dataset2.iloc[:, 0].values
 LabelsFingerprints = dataset2.iloc[:, 1].values
 
 
 # load the model
-# Resnet58 without dense layers ... including GlobalAveragePooLing20() layer -> 2048 features
-resnet50_base = ks.applications.resnet50.ResNet50(weights="imagenet", include_top=False, input_shape= (224, 224, 3))
-avg = ks.layers.GlobalAveragePooling2D()(resnet50_base.output)
+# Resnet58 without dense layers ... including GlobalAveragePooLing20() layer -> 2048 features to summarize the extracted features into a vector
+
+resnet50_base = ks.applications.resnet50.ResNet50(weights="imagenet", include_top=False, input_shape= (224, 224, 3)) # exclude the final classification layers of the model, focusing only on feature extraction
+
+avg = ks.layers.GlobalAveragePooling2D()(resnet50_base.output) 
 resnet50_modelfs = ks.Model(inputs=resnet50_base.input, outputs=avg)
 resnet50_modelfs.summary()
 
@@ -371,6 +376,11 @@ print(IDs[index])
 print (mindist)
 ```
 ## Output
+
+
+
+
+
 
 
 
