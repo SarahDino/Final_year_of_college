@@ -299,36 +299,40 @@ resnet50_modelfs.summary()
 print(" \n Start processing data ... \n ")
 
 # select randomly a person
-value = randint(0, len(ListofLabels)-1)
+value = randint(0, len(ListofLabels)-1) # Generates a random integer within the range of 0 to the length of ListofLabels minus 1 to randomly select a person from the list
 Person = ListofLabels[value]
 
 print (Person)
 
-# select randomly one case (face + fingerprints) from datasets
 
-faces = (Faces[LabelsFaces == Person])[:len(Faces)]
-value = randint(0, len(faces)-1)
+# select randomly one case (face + fingerprints) from datasets for the randomly selected person
+faces = (Faces[LabelsFaces == Person])[:len(Faces)] 
+value = randint(0, len(faces)-1) # select a specific face data point from the available faces for the chosen person
 SelectedFace = faces[value]
 
 print(SelectedFace)
 
 fingerprints = (Fingerprints[LabelsFingerprints == Person])[:len(Fingerprints)]
-value = randint(0, len(fingerprints)-1)
-SelectedFingerprints = fingerprints [value]
+value = randint(0, len(fingerprints)-1) # select a specific fingerprint data point from the available fingerprint for the chosen person
+SelectedFingerprints = fingerprints[value]
 
 print (SelectedFingerprints)
 
 
-# generate cancelable template
+# generate cancelable template for the selected image for the selected person
 facefilename = "GP/Faces/Faces/" + SelectedFace
 imface = ks.preprocessing.image.load_img(facefilename)
-faceimage = ks.preprocessing.image.img_to_array(imface)
+
+faceimage = ks.preprocessing.image.img_to_array(imface) # Convert the loaded images from PIL image format to NumPy array format allows for efficient manipulation and numerical operations on the image data, such as applying filters
+
 fingerprintsfilename = "GP/Real/" + SelectedFingerprints
 imfingerprint = ks.preprocessing.image.load_img(fingerprintsfilename)
 fingerprint = ks.preprocessing.image.img_to_array(imfingerprint)
+
 faceimage = tensorflow.image.resize(faceimage, [224, 224])
 fingerprint = tensorflow.image.resize(fingerprint, [224, 224])
-images_resized = np.array([faceimage, fingerprint])
+
+images_resized = np.array([faceimage, fingerprint]) # Combine the resized face and fingerprint images into a single NumPy array biometric data
 
 
 # Feature Extraction using pretrained CNN - ResNet50
@@ -341,17 +345,18 @@ print (deepfeatures)
 
 
 # random projection of deepfeatures
-X = deepfeatures.copy()
-X_new = numpy.append(X[0], X[1), axis=0)
+X = deepfeatures.copy() # Create a copy of the deep features (X) to avoid modifying the original data
+X_new = numpy.append(X[0], X[1), axis=0) # Combine the features from the face and fingerprint into a single row 
 print(X_new)
-X_final = randon_convolution(X_new, RandomKernel)
+X_final = randon_convolution(X_new, RandomKernel) # Apply the random_convolution function to the combined features using the pre-defined kernel 
 
 print("\n in Randon Convolution of deep features ...")
 print(X_final.shape)
 print(X_final)
 print("\n cancelable template ...")
 
-cancelabletemplate = X_final.copy()
+cancelabletemplate = X_final.copy() # Create a copy of the randomly modified features and store it as the cancelabletemplate This serves as the person's cancelable biometric template for this identification attempt
+
 print("cancelable template + Person ...")
 print(cancelabletemplate.shape)
 print(cancelabletemplate)
@@ -361,30 +366,42 @@ print("\n")
 
 # matching using Euclidean Distance between Cancelable template and DB ...
 print ("matching process")
-index = 0
-mindist = norm(DB[0]-cancelabletemplate)
+index = 0 # Set to 0 to keep track of the index of the template with the minimum distance
 
+mindist = norm(DB[0]-cancelabletemplate) # Set to the Euclidean distance between the first template in the database (DB[0]) and the cancelable template This serves as the initial minimum distance
+
+
+# The code iterates through all stored cancelable templates (DB) in the database
+# For each template (DB[i]), it calculates the Euclidean distance (dist) between it and the current template using norm(DB[i]-cancelabletemplate)
+# The Euclidean distance measures how similar the templates are
 for i in range(len(DB)):
     dist = norm (DB[i]-cancelabletemplate)
-    print (DB[i])
-    print (dist)
-    if (dist < mindist):
-        mindist = dist
-        index = 1
+    print (DB[i]) # the current template being compared
+    print (dist) # the calculated Euclidean distance between the current pair of templates
 
-print(IDs[index])
-print (mindist)
+# # If the calculated distance is less than the smallest distance found so far (mindist), it means the current template is a closer match
+    if (dist < mindist): 
+        mindist = dist # Updates the minimum distance to the current, smaller distance
+        index = 1 # Stores the index of the closest matching template 
+
+print(IDs[index]) # ID (name) of the person associated with the closest matching template
+print (mindist) # final minimum distance, indicating the level of similarity between the identified person's template and the newly generated cancelable template
 ```
+
 ## Output
+<br><br>
+This code performs a privacy-focused identification process. It starts by selecting a person (potentially for testing) and accessing their face and fingerprint data. The images are then prepared for analysis and combined. Deep learning extracts unique features from the combined data. To enhance privacy, randomness is added to these features, creating a temporary "cancelable template" for this attempt only. Finally, the system compares this cancelable template with stored templates in a database and identifies the person with the most similar stored data.
 
+<br><br>
+the current template
+![Personal identification](Personalidentification1.jpg)<br><br>
 
+<br><br>all stored cancelable templates
+![Personal identification](Personalidentification2.jpg)<br><br>
 
-
-
-
-
-
-
+<br><br>![Personal identification](Personalidentification3.jpg)<br><br>
+<br><br>![Personal identification](Personalidentification4.jpg)<br><br>
+<br><br>![Personal identification](Personalidentification5.jpg)<br><br>
 
 # Evaluation 
 
