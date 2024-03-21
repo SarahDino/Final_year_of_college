@@ -392,15 +392,15 @@ print (mindist) # final minimum distance, indicating the level of similarity bet
 <br><br>
 This code performs a privacy-focused identification process. It starts by selecting a person (potentially for testing) and accessing their face and fingerprint data. The images are then prepared for analysis and combined. Deep learning extracts unique features from the combined data. To enhance privacy, randomness is added to these features, creating a temporary "cancelable template" for this attempt only. Finally, the system compares this cancelable template with stored templates in a database and identifies the person with the most similar stored data.
 
-<br><br>
-the current template
+<br><br><br><br>
+the current template <br>
 ![Personal identification](Personalidentification1.jpg)<br><br>
 
 <br><br>all stored cancelable templates
 ![Personal identification](Personalidentification2.jpg)<br><br>
 
-<br><br>![Personal identification](Personalidentification3.jpg)<br><br>
-<br><br>![Personal identification](Personalidentification4.jpg)<br><br>
+<br><br>![Personal identification](Personalidentification3.png)<br><br>
+<br><br>![Personal identification](Personalidentification4.png)<br><br>
 <br><br>![Personal identification](Personalidentification5.jpg)<br><br>
 
 # Evaluation 
