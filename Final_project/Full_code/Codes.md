@@ -406,14 +406,145 @@ the current template <br>
 # Evaluation 
 
 ```python
+# Evaluation of identification phase:Personal Identification using Cancelable biometrics based on
+# Deep Learning - Transfer learning (pretrained CNN as Feature Extractor) and  Random Convolution
+# evaluation with N faces and N fingerprints for each Person
+
+import numpy
+import tensorflow
+import time
+from tensorflow import keras as ks
+import numpy as np
+from pandas import read_csv
+from numpy.linalg import norm
+
+#Import Random Number Generation for selecting random data
+from random import seed
+from random import randint
+
+# definition of Random Convolution simple convolution with a pre-defined kernel to an input vector
+# This function adds randomness to the extracted features for enhancing privacy
+RandomKernel = [1, 2, 1]
+
+def convolution(A, K, index):
+    sum = 0
+    if ((index-1) >= 0):
+        sum = sum + K[0]*A[index-1]
+    sum =  K[1]*A[index]
+    if ((index+1) <len(A)):
+        sum = sum + K[2]*A[index+1]
+    return sum
+
+def random_convolution(V, Kernel):
+    R = np.zeros(len(V))
+    for i in range(len(V)):
+        R[i] = convolution(V, Kernel, i)
+    return R
 
 
+# set the seed of random generator
+seed(int(time.time()))
+
+# Load DB and IDs
+
+ListofLabels = ['Akshay Kumar', 'Alexandra Daddario', 'Alia Bhatt', 'Amitabh Bachchan', 'Andy Samberg',
+                'Anushka Sharma', 'Billie Eilish', 'Brad Pitt', 'Camila Cabello', 'Charlize Theron', 'Claire Holt',
+                'Courtney Cox', 'Dwayne Johnson', 'Elizabeth Olsen', 'Ellen Degeneres', 'Henry Cavill', 'Hrithik Roshan',
+                'Hugh Jackman', 'Jessica Alba', 'Kashyap', 'Lisa Kudrow', 'Margot Robbie', 'Marmik', 'Natalie Portman',
+                'Priyanka Chopra', 'Robert Downey Jr', 'Roger Federer', 'Tom Cruise', 'Vijay Deverakonda',
+                'Virat Kohli', 'Zac Efron']
 
 
+# Loads the stored cancelable templates (DB) and their corresponding IDs (IDs) from NumPy files.
+filename = "D:/Data/Biometrics/DB.npy"
+DB = np.load(filename)
+
+filename = "D:/Data/Biometrics/IDs.npy"
+IDs = np.load(filename)
+
+# Reads CSV files containing file paths for face and fingerprint images associated with each person in ListofLabels.
+
+dataset1 = read_csv("D:/Data/Biometrics/Faces/Datasetfaces.csv")
+Faces = dataset1.iloc[:, 0].values
+LabelsFaces = dataset1.iloc[:, 1].values
+
+dataset2 = read_csv("D:/Data/Biometrics/Fingerprints/Datasetfingerprints.csv")
+Fingerprints = dataset2.iloc[:, 0].values
+LabelsFingerprints = dataset2.iloc[:, 1].values
 
 
+# load the model
+# Resnet50 without dense layers ... including GlobalAveragePooling2D() layer -> 2048 features
+# convert the extracted features into a single vector of size 2048.
+resnet50_base = ks.applications.resnet50.ResNet50(weights="imagenet", include_top=False, input_shape=(224, 224, 3))
+avg = ks.layers.GlobalAveragePooling2D()(resnet50_base.output)
+resnet50_modelfs = ks.Model(inputs=resnet50_base.input, outputs=avg)
+resnet50_modelfs.summary()
 
 
+print(" \n Start Evaluating the identification process  ... \n ")
+
+# keeps track of correctly identified cases
+countaccuracy = 0
+
+# defines the number of times to repeat the identification process for each person to get a more reliable accuracy measure
+Nrepeats = 30
+
+# The loop iterates through each person's name in ListofLabels
+for i in range(len(ListofLabels)):
+    Person = ListofLabels[i]
+    print(Person)
+    for j in range(Nrepeats): # Performs the identification process Nrepeats times for each person
+
+        # select randomly one case (face + fingerprints) from datasets
+        faces = (Faces[LabelsFaces == Person])[:len(Faces)]
+        value = randint(0,len(faces)-1)
+        SelectedFace = faces[value]
+        fingerprints = (Fingerprints[LabelsFingerprints == Person])[:len(Fingerprints)]
+        value = randint(0,len(fingerprints)-1)
+        SelectedFingerprints = fingerprints[value]
+
+        # Generates the cancelable template using the selected images
+        facefilename = "D:/Data/Biometrics/Faces/Faces/" + SelectedFace
+        imface = ks.preprocessing.image.load_img(facefilename)
+        faceimage = ks.preprocessing.image.img_to_array(imface)
+        fingerprintsfilename = "D:/Data/Biometrics/Fingerprints/Real/" + SelectedFingerprints
+        imfingerprint = ks.preprocessing.image.load_img(fingerprintsfilename)
+        fingerprint = ks.preprocessing.image.img_to_array(imfingerprint)
+        faceimage = tensorflow.image.resize(faceimage, [224, 224])
+        fingerprint = tensorflow.image.resize(fingerprint, [224, 224])
+        images_resized = np.array([faceimage, fingerprint])
+
+        # Feature Extraction using pretrained CNN - ResNet50
+        inputs = ks.applications.resnet50.preprocess_input(images_resized)
+        Y_proba = resnet50_modelfs.predict(inputs)
+        deepfeatures = Y_proba
+
+        # random convolution of deepfeatures for privacy enhancement
+        X = deepfeatures.copy()
+        X_new = numpy.append(X[0], X[1], axis=0)
+        X_final = random_convolution(X_new,RandomKernel)
+        cancelabletemplate = X_final.copy()
+
+        # matching process ... Finds the closest match (minimum Euclidean distance) between the cancelable template and stored templates in the database
+        index = 0
+        mindist = norm(DB[0]-cancelabletemplate)
+        for m in range(len(DB)):
+            dist = norm(DB[m]-cancelabletemplate)
+            if (dist < mindist):
+                mindist = dist
+                index = m
+
+        # Checks if the identified person (ListofLabels[index]) matches the current person (Person). If a correct identification is made, countaccuracy is incremented.
+        if (index == i):
+            countaccuracy = countaccuracy + 1
+
+
+print("\n Accuracy score (%): ")
+print((countaccuracy/(len(ListofLabels)*Nrepeats)*100))
 
 ```
 ## Output
+
+High accuracy when choosing 30 repeats  
+<br><br>![Evaluation](Evaluation30repeats.jpg)<br><br>
